@@ -1,0 +1,214 @@
+body {
+    background-color: #080710;
+}
+
+.background {
+    width: 430px;
+    height: 480px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+}
+
+.background .shape {
+    height: 200px;
+    width: 200px;
+    position: absolute;
+    border-radius: 50%;
+}
+
+.shape:first-child {
+    background: linear-gradient(#1845ad, #23a2f6);
+    left: -100px;
+    top: -130px;
+}
+
+.shape:last-child {
+    background: linear-gradient(to right, #ff512f, #f09819);
+    right: -100px;
+    bottom: -130px;
+}
+
+form {
+    height: 520px;
+    width: 400px;
+    background-color: rgba(255, 255, 255, 0.13);
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+    padding: 50px 35px;
+}
+
+form * {
+    font-family: Poppins, sans-serif;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    outline: none;
+    border: none;
+}
+
+form h3 {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 42px;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-top: 30px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+input {
+    display: block;
+    height: 50px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+    padding: 0 10px;
+    margin-top: 8px;
+    font-family: Poppins, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+::placeholder {
+    color: #e5e5e5;
+}
+
+button {
+    margin-top: 50px;
+    width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    background-color: black;
+    padding: 15px;
+    border: none;
+    border-radius: .6em;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+button span:not(:nth-child(6)){
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 40px;
+    width: 40px;
+    background: rgba(131, 58, 100);
+    background: linear-gradient(90deg, rgba(135, 58, 130, 1) 0%,
+                                rgba(253, 29, 29, 1) 50%, rgba(252, 176, 60, 1) 100%);
+    border-radius: 50%;
+    transition: .6s ease;
+}
+button span:nth-child(6){
+    position: relative;
+}
+
+button span:nth-child(1){
+    transform: translate(-10em, -3em);
+}
+button span:nth-child(2){
+    transform: translate(7em, 1em);
+}
+button span:nth-child(3){
+    transform: translate(-2em, 1em);
+}
+button span:nth-child(4){
+    transform: translate(-12em, 0.5em);
+}
+button span:nth-child(5){
+    transform: translate(3.5em, -3em);
+}
+button:hover span:not(:nth-child(6)){
+    transform: translate(-50%, -50%) scale(4);
+    transition: 1.5s ease;
+}
+.social {
+    margin-top: 30px;
+    margin-left: 30%;
+    display: inline-block;
+}
+
+.social div {
+    align-items: center;
+    display: flex;
+    background: red;
+    width: 150px;
+    border-radius: 3px;
+    padding: 5px 10px 10px 5px;
+    background-color: rgba(255, 255, 255, 0.27);
+    color: #eaf8fb;
+    text-align: center;
+}
+
+.social div:hover {
+    background-color: rgba(255, 255, 255, 0.47);
+
+}
+
+.social i {
+    margin-right: 4px;
+
+}
+
+.social img {
+    margin-left: 30px;
+}
+.container{
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0.5em;
+}
+.alert{
+    align-items: center;
+    text-align: center;
+    padding: 0.25em 0.75em;
+}
+.alert-error {
+    background-color: #dc3545;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.alert-warning {
+    background-color: #ffc107;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.alert-info {
+    background-color: #2196f3;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.alert-success {
+    background-color: #4caf50;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
