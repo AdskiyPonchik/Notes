@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Note
+from .models import Note, Participant
+
+
+@admin.register(Participant)
+class ParticipantAdmin(admin.ModelAdmin):
+    list_display = ['user', 'email', 'profileimg', 'email_token', 'email_verified']
+    list_filter = ['email', 'email_verified']
+    search_fields = ['user', 'email']
 
 
 @admin.register(Note)
