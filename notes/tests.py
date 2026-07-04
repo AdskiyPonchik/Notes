@@ -120,14 +120,73 @@ class NoteViewTests(TestCase):
         self.client.force_login(self.bob)
         response = self.client.get(reverse('get_notes'),
                                    headers={'X-Requested-With': 'XMLHttpRequest'})
-        self.assertEqual(response.json(), [])
+        self.assertEqual(response.json()['notes'], [])
 
         self.client.force_login(self.alice)
         response = self.client.get(reverse('get_notes'),
                                    headers={'X-Requested-With': 'XMLHttpRequest'})
-        data = response.json()
+        data = response.json()['notes']
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['title'], 'Alice note')
+
+    def test_get_notes_view_filter_and_counts(self):
+        Note.objects.create(title='Archived', text='old', status=Note.Status.ARCHIVED,
+                            participant=self.alice.participant)
+        Note.objects.create(title='Trashed', text='gone', status=Note.Status.TRASH,
+                            participant=self.alice.participant)
+        self.client.force_login(self.alice)
+
+        response = self.client.get(reverse('get_notes'), {'filter': 'archived'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        data = response.json()
+        self.assertEqual([n['title'] for n in data['notes']], ['Archived'])
+        self.assertEqual(data['counts'], {'active': 1, 'archived': 1, 'trash': 1})
+
+        response = self.client.get(reverse('get_notes'), {'filter': 'trash'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        self.assertEqual([n['title'] for n in response.json()['notes']], ['Trashed'])
+
+    def test_get_notes_active_includes_favorites(self):
+        Note.objects.create(title='Starred', text='fav', status=Note.Status.FAVORITE,
+                            participant=self.alice.participant)
+        self.client.force_login(self.alice)
+        response = self.client.get(reverse('get_notes'), {'filter': 'active'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        titles = [n['title'] for n in response.json()['notes']]
+        self.assertEqual(titles, ['Alice note', 'Starred'])
+
+    def test_get_notes_rejects_unknown_filter(self):
+        self.client.force_login(self.alice)
+        response = self.client.get(reverse('get_notes'), {'filter': 'bogus'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_notes_extracts_tags(self):
+        Note.objects.create(title='Tagged', text='Buy #milk and #Milk plus #to-do items',
+                            participant=self.alice.participant)
+        self.client.force_login(self.alice)
+        response = self.client.get(reverse('get_notes'),
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        tagged = [n for n in response.json()['notes'] if n['title'] == 'Tagged'][0]
+        self.assertEqual(tagged['tags'], ['milk', 'to-do'])
+
+    def test_get_notes_filters_by_tag_param(self):
+        Note.objects.create(title='Tagged', text='Buy #milk today',
+                            participant=self.alice.participant)
+        self.client.force_login(self.alice)
+        response = self.client.get(reverse('get_notes'), {'tag': 'milk'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        titles = [n['title'] for n in response.json()['notes']]
+        self.assertEqual(titles, ['Tagged'])
+
+    def test_get_notes_tag_param_accepts_hash_prefix_and_case(self):
+        Note.objects.create(title='Tagged', text='Buy #Milk today',
+                            participant=self.alice.participant)
+        self.client.force_login(self.alice)
+        response = self.client.get(reverse('get_notes'), {'tag': '#MILK'},
+                                   headers={'X-Requested-With': 'XMLHttpRequest'})
+        titles = [n['title'] for n in response.json()['notes']]
+        self.assertEqual(titles, ['Tagged'])
 
     def test_get_notes_rejects_non_ajax(self):
         self.client.force_login(self.alice)
@@ -149,3 +208,124 @@ class NoteViewTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['status'], 'error')
         self.assertIn('title', response.json()['errors'])
+
+
+class UpdateNoteTests(TestCase):
+    def setUp(self):
+        self.alice = make_user('alice', 'alice@example.com')
+        self.bob = make_user('bob', 'bob@example.com')
+        self.note = Note.objects.create(
+            title='Alice note', text='secret', participant=self.alice.participant)
+
+    def update(self, note_id, payload, client=None):
+        client = client or self.client
+        return client.post(
+            reverse('update_note', kwargs={'note_id': note_id}),
+            payload, content_type='application/json',
+            headers={'X-Requested-With': 'XMLHttpRequest'})
+
+    def test_requires_login(self):
+        response = self.update(self.note.pk, {'title': 'Hacked'})
+        self.assertEqual(response.status_code, 302)
+
+    def test_updates_own_note_fields(self):
+        self.client.force_login(self.alice)
+        response = self.update(self.note.pk, {'title': 'Renamed', 'text': 'updated'})
+        self.assertEqual(response.status_code, 200)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.title, 'Renamed')
+        self.assertEqual(self.note.text, 'updated')
+        self.assertEqual(response.json()['note']['title'], 'Renamed')
+
+    def test_toggles_status(self):
+        self.client.force_login(self.alice)
+        response = self.update(self.note.pk, {'status': Note.Status.FAVORITE})
+        self.assertEqual(response.status_code, 200)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.status, Note.Status.FAVORITE)
+
+    def test_cannot_update_another_users_note(self):
+        self.client.force_login(self.bob)
+        response = self.update(self.note.pk, {'title': 'Hijacked'})
+        self.assertEqual(response.status_code, 404)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.title, 'Alice note')
+
+    def test_rejects_invalid_status(self):
+        self.client.force_login(self.alice)
+        response = self.update(self.note.pk, {'status': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('status', response.json()['errors'])
+
+    def test_rejects_empty_title(self):
+        self.client.force_login(self.alice)
+        response = self.update(self.note.pk, {'title': '   '})
+        self.assertEqual(response.status_code, 400)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.title, 'Alice note')
+
+    def test_rejects_empty_payload(self):
+        self.client.force_login(self.alice)
+        response = self.update(self.note.pk, {})
+        self.assertEqual(response.status_code, 400)
+
+    def test_rejects_non_ajax(self):
+        self.client.force_login(self.alice)
+        response = self.client.post(
+            reverse('update_note', kwargs={'note_id': self.note.pk}),
+            {'title': 'Nope'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_accepts_form_encoded_post(self):
+        self.client.force_login(self.alice)
+        response = self.client.post(
+            reverse('update_note', kwargs={'note_id': self.note.pk}),
+            {'title': 'Via form'},
+            headers={'X-Requested-With': 'XMLHttpRequest'})
+        self.assertEqual(response.status_code, 200)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.title, 'Via form')
+
+
+class NoteActionTests(TestCase):
+    def setUp(self):
+        self.alice = make_user('alice', 'alice@example.com')
+        self.bob = make_user('bob', 'bob@example.com')
+        self.note = Note.objects.create(
+            title='Alice note', text='secret', participant=self.alice.participant)
+
+    def act(self, action, note_id=None):
+        return self.client.post(
+            reverse('note_action', kwargs={'note_id': note_id or self.note.pk,
+                                           'action': action}),
+            headers={'X-Requested-With': 'XMLHttpRequest'})
+
+    def test_archive_trash_restore_cycle(self):
+        self.client.force_login(self.alice)
+        for action, expected in [('archive', Note.Status.ARCHIVED),
+                                 ('trash', Note.Status.TRASH),
+                                 ('restore', Note.Status.ACTIVE)]:
+            response = self.act(action)
+            self.assertEqual(response.status_code, 200)
+            self.note.refresh_from_db()
+            self.assertEqual(self.note.status, expected)
+            self.assertEqual(response.json()['note']['status'], expected)
+
+    def test_unknown_action_404s(self):
+        self.client.force_login(self.alice)
+        self.assertEqual(self.act('explode').status_code, 404)
+
+    def test_cannot_move_another_users_note(self):
+        self.client.force_login(self.bob)
+        self.assertEqual(self.act('trash').status_code, 404)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.status, Note.Status.ACTIVE)
+
+    def test_rejects_non_ajax(self):
+        self.client.force_login(self.alice)
+        response = self.client.post(
+            reverse('note_action', kwargs={'note_id': self.note.pk, 'action': 'archive'}))
+        self.assertEqual(response.status_code, 400)
+
+    def test_requires_login(self):
+        self.assertEqual(self.act('archive').status_code, 302)

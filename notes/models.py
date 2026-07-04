@@ -16,14 +16,16 @@ class Participant(models.Model):
 
 class Note(models.Model):
     class Status(models.TextChoices):
-        ALL = 'A', 'All'
-        FAVORITE = 'F', 'Favorite'
+        ACTIVE = 'A', 'Active'
+        FAVORITE = 'F', 'Favorite'  # a favorite is an active note with a star
+        ARCHIVED = 'R', 'Archived'
+        TRASH = 'T', 'Trash'
 
     title = models.CharField(max_length=255)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     participant = models.ForeignKey(Participant, related_name='notes', on_delete=models.CASCADE)
-    status = models.CharField(max_length=1, choices=Status.choices, default=Status.ALL)
+    status = models.CharField(max_length=1, choices=Status.choices, default=Status.ACTIVE)
 
     class Meta:
         ordering = ['created_at']
