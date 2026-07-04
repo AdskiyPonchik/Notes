@@ -1,83 +1,73 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.urls import reverse_lazy
-from django.utils.http import urlsafe_base64_decode
-from django.views.generic import ListView, View
-from django.core.exceptions import ValidationError
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.views import LoginView, LogoutView
-from .models import Note, Participant
-from .forms import LoginForm, RegistrationForm
-from .utils import send_email_for_verify
-from django.db import transaction
-from django.shortcuts import render, redirect
-from django.views import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login, logout, get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib import messages
+from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.shortcuts import render, redirect
+from django.utils.http import urlsafe_base64_decode
+from django.views.generic import View
+
+from .forms import LoginForm, RegistrationForm, NoteAppend
+from .utils import send_email_for_verify
 
 User = get_user_model()
 
 
-# Create your views here.
-class NoteListView(ListView):
-    queryset = Note.objects.all()
-    context_object_name = 'notes'
+@login_required
+def get_notes(request):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if not is_ajax:
+        return HttpResponseBadRequest('Invalid request')
+    if request.method != "GET":
+        return JsonResponse({'status': 'Invalid request'}, status=400)
+    notes = request.user.participant.notes.all()
+    data = [{'id': note.id, 'title': note.title, 'text': note.text} for note in notes]
+    return JsonResponse(data, safe=False)
+
+
+class NoteListView(LoginRequiredMixin, View):
+    form_class = NoteAppend
     template_name = 'notes/home.html'
 
-
-class Login(View):
-    template_name = 'notes/login.html'
-    form_class = LoginForm
-
     def get(self, request):
-        form = self.form_class()
-        message = ''
-        return render(request, self.template_name, context={'form': form, 'message': message})
+        participant = request.user.participant
+        return render(request, self.template_name, context={
+            'form': self.form_class(),
+            'participant': participant,
+            'notes': participant.notes.all(),
+        })
 
-    def post(self, request):
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return redirect('home')
-            else:
-                messages.error(request, 'Your account is disabled')
-        else:
-            messages.error(request, 'Incorrect username or password')
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            note = form.save(commit=False)
+            note.participant = request.user.participant
+            note.save()
+            return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
-        return render(request, self.template_name)
+
+class Login(LoginView):
+    template_name = 'notes/login.html'
+    authentication_form = LoginForm
+    redirect_authenticated_user = True
 
 
 class Signup(View):
     template_name = "notes/register.html"
 
     def get(self, request):
-        context = {
-            'form': RegistrationForm()
-        }
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'form': RegistrationForm()})
 
     def post(self, request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            password = form.clean_password2()
-            # Authenticate the user after creation
-            user = authenticate(username=username, password=password)
-            new_profile = Participant.objects.create(user=user, email=user.email)
-            new_profile.save()
+            user = form.save()
             send_email_for_verify(request, user=user)
             return redirect('confirm_email')
-
-        context = {
-            'form': form
-        }
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'form': form})
 
 
 class EmailVerify(View):
@@ -86,12 +76,10 @@ class EmailVerify(View):
         user = self.get_user(uidb64=uidb64)
 
         if user is not None and default_token_generator.check_token(user, token):
-            user.email_verify = True
-            user.save()
-            profile = Participant.objects.get(user=user)
-            profile.email_verified = True
-            profile.save()
-            login(request, user)
+            participant = user.participant
+            participant.email_verified = True
+            participant.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('home')
         return redirect('invalid_token')
 
@@ -108,25 +96,3 @@ class EmailVerify(View):
 def logout_view(request):
     logout(request)
     return redirect('login')
-
-
-"""def user_login(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            cd = form.cleaned_data
-            user = authenticate(request,
-                                username=cd['username'],
-                                password=cd['password'])
-
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    return HttpResponse('Authenticated successfully')
-                else:
-                    return HttpResponse('Disabled account')
-            else:
-                return HttpResponse('Invalid login')
-    else:
-        form = LoginForm()
-    return render(request, 'notes/login.html', {'form': form})"""

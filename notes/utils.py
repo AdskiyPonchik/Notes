@@ -9,6 +9,7 @@ def send_email_for_verify(request, user):
     current_site = get_current_site(request)
     context = {
         'user': user,
+        'protocol': request.scheme,
         'domain': current_site.domain,
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': default_token_generator.make_token(user),
