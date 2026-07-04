@@ -6,10 +6,8 @@ User = get_user_model()
 
 # Create your models here.
 class Participant(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    email = models.EmailField(max_length=255, verbose_name='email')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='participant')
     profileimg = models.ImageField(upload_to='profile_images', default='default.png')
-    email_token = models.CharField(max_length=200)
     email_verified = models.BooleanField(default=False)
 
     def __str__(self):
@@ -25,7 +23,7 @@ class Note(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     participant = models.ForeignKey(Participant, related_name='notes', on_delete=models.CASCADE)
-    status = models.CharField(max_length=2, choices=Status.choices, default=Status.ALL)
+    status = models.CharField(max_length=1, choices=Status.choices, default=Status.ALL)
 
     class Meta:
         ordering = ['created_at']
