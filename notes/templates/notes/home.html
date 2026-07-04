@@ -2,48 +2,124 @@
 {% load static %}
 {% block title %}Home{% endblock %}
 {% block content %}
-    <div class="header">
-        <h1 class="logo">{% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}">Notes</a>
-        {% else %}
-            <a href="{% url 'login' %}">Notes</a>
-        {% endif %}
-        </h1>
-        <div class="image">
-            <img class="profile-image" src="{{ participant.profileimg.url }}" alt="{{ request.user.username }}">
-        </div>
+    <div class="app">
+        <header class="header">
+            <h1 class="logo">
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'logout' %}">Notes</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Notes</a>
+                {% endif %}
+            </h1>
+            <div class="avatar">
+                <img class="avatar-img" src="{{ participant.profileimg.url }}" alt="{{ request.user.username }}">
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <nav class="sidebar-nav" aria-label="Library">
+                <h2 class="sidebar-title">Library</h2>
+                <button type="button" class="sidebar-link view-btn is-active" data-view="active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <span class="view-label">Notes</span>
+                    <span class="view-count" data-count="active"></span>
+                </button>
+                <button type="button" class="sidebar-link view-btn" data-view="archived">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="5" rx="1"/>
+                        <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>
+                        <line x1="10" y1="13" x2="14" y2="13"/>
+                    </svg>
+                    <span class="view-label">Archive</span>
+                    <span class="view-count" data-count="archived"></span>
+                </button>
+                <button type="button" class="sidebar-link view-btn" data-view="trash">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span class="view-label">Trash</span>
+                    <span class="view-count" data-count="trash"></span>
+                </button>
+            </nav>
+
+            <nav class="sidebar-nav sidebar-tags" aria-label="Tags">
+                <h2 class="sidebar-title">Tags</h2>
+                <div id="tagList" class="tag-list">
+                    <p class="tag-empty">No #tags yet</p>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="workspace">
+            <div class="options-container" id="subFilterBar" role="tablist" aria-label="Note filters">
+                <button type="button" class="option subfilter-btn is-active" data-subfilter="all"
+                        role="tab" aria-selected="true">
+                    All Notes
+                </button>
+                <button type="button" class="option subfilter-btn" data-subfilter="favorites"
+                        role="tab" aria-selected="false">
+                    Favorites
+                </button>
+            </div>
+
+            <section class="card-area" id="notes"
+                     data-url="{% url 'get_notes' %}"
+                     data-update-url="{% url 'update_note' 0 %}"
+                     data-action-url="{% url 'note_action' 0 'archive' %}"
+                     aria-live="polite">
+                <!-- Notes are rendered here by window.js -->
+            </section>
+        </main>
     </div>
-    <aside>
-        <p>Coming soon</p>
-    </aside>
-    <div class="options-container">
-        <div class="option option-common">
-            <p>Common</p>
-        </div>
-        <div class="option option-favorite">
-            <p>Favorites</p>
-        </div>
-    </div>
-    <div id="noteModal" class="card">
-        <div class="modal-content">
-            <span class="close">&times;</span>
+
+    <div id="noteModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
+            <div class="modal-header">
+                <h2 id="noteModalTitle">New note</h2>
+                <button type="button" class="close" aria-label="Close">&times;</button>
+            </div>
             <form id="noteForm" method="post">
                 {% csrf_token %}
                 {% for field in form %}
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <small>{{ field.errors|striptags }}</small>
-                    {% endif %}
+                    <div class="form-field">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <small class="field-error">{{ field.errors|striptags }}</small>
+                        {% endif %}
+                    </div>
                 {% endfor %}
-                <button type="submit" id="submitNote">Create note</button>
+                <button type="submit" id="submitNote" class="btn-primary">Create note</button>
             </form>
         </div>
     </div>
-    <div class="card-area" id="notes" data-url="{% url 'get_notes' %}">
-        <!-- Notes are rendered here by window.js -->
+
+    <div id="focusOverlay" class="focus-overlay" aria-hidden="true">
+        <div class="focus-card" role="dialog" aria-modal="true" aria-label="Edit note">
+            <input type="text" id="focusTitle" class="focus-title" maxlength="255"
+                   placeholder="Title" aria-label="Note title">
+            <textarea id="focusText" class="focus-text"
+                      placeholder="Write your note… use #tags anywhere in the text"
+                      aria-label="Note text"></textarea>
+            <div class="form-hint">
+                Tip: type a <strong>#hashtag</strong> (e.g. <code>#solo</code>) anywhere in your
+                text to automatically bind this note to that category.
+            </div>
+            <div class="focus-actions">
+                <div class="focus-actions-side" id="focusStatusActions">
+                    <!-- Archive / trash / restore buttons injected by window.js -->
+                </div>
+                <button type="button" id="focusSave" class="btn-primary focus-save">Save</button>
+            </div>
+        </div>
     </div>
-    <div class="circle">
-        <div class="plus"><a href="#" id="openModalBtn">+</a></div>
-    </div>
+
+    <button type="button" id="openModalBtn" class="fab" aria-label="Create a note">+</button>
 {% endblock %}

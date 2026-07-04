@@ -1,55 +1,58 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="{% static 'notes/css/register.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'notes/css/login.css' %}?v=2">
     <title>Registration</title>
 </head>
 <body>
-<div class="container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
+    <div class="messages">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="background" aria-hidden="true">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <form class="auth-card" method="post">
+        <h3>Create your account</h3>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <small class="field-error">{{ form.non_field_errors|striptags }}</small>
+        {% endif %}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <small class="field-error">{{ field.errors|striptags }}</small>
+                {% endif %}
             </div>
         {% endfor %}
-    {% endif %}
-</div>
-<div class="background">
-    <div class="shape"></div>
-    <div class="shape"></div>
-</div>
-<form method="post">
-    <h3>Sign up here</h3>
-    {% csrf_token %}
-    {% for field in form %}
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.errors %}
-            <small>{{ field.errors|striptags }}</small>
-        {% endif %}
-    {% endfor %}
-    <button type="submit">
-        <span class="circle1"></span>
-        <span class="circle2"></span>
-        <span class="circle3"></span>
-        <span class="circle4"></span>
-        <span class="circle5"></span>
-        <span class="text">Sign up</span>
-    </button>
-    <div class="social">
-        <button type="submit" formaction="{% url "social:begin" "google-oauth2" %}" formnovalidate
-                style="background:none;border:none;padding:0;cursor:pointer;width:100%">
-            <div class="go">
-                <img src="{% static 'notes/images/Google.png' %}" alt="Google" width="28" height="28">
-                <i class="Google"></i>Google
-            </div>
+
+        <button type="submit" class="btn-primary">Sign up</button>
+
+        <div class="divider"><span>or</span></div>
+
+        <button type="submit" class="btn-oauth"
+                formaction="{% url "social:begin" "google-oauth2" %}" formnovalidate>
+            <img src="{% static 'notes/images/Google.png' %}" alt="" width="20" height="20">
+            <span>Continue with Google</span>
         </button>
-    </div>
-</form>
+
+        <p class="auth-alt">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </form>
 </body>
 </html>
