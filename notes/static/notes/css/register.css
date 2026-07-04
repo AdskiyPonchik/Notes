@@ -100,7 +100,8 @@ button {
     cursor: pointer;
     overflow: hidden;
 }
-button span:not(:nth-child(6)){
+
+button span:not(:nth-child(6)) {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -109,33 +110,40 @@ button span:not(:nth-child(6)){
     width: 40px;
     background: rgba(131, 58, 100);
     background: linear-gradient(90deg, rgba(135, 58, 130, 1) 0%,
-                                rgba(253, 29, 29, 1) 50%, rgba(252, 176, 60, 1) 100%);
+    rgba(253, 29, 29, 1) 50%, rgba(252, 176, 60, 1) 100%);
     border-radius: 50%;
     transition: .6s ease;
 }
-button span:nth-child(6){
+
+button span:nth-child(6) {
     position: relative;
 }
 
-button span:nth-child(1){
+button span:nth-child(1) {
     transform: translate(-10em, -3em);
 }
-button span:nth-child(2){
+
+button span:nth-child(2) {
     transform: translate(7em, 1em);
 }
-button span:nth-child(3){
+
+button span:nth-child(3) {
     transform: translate(-2em, 1em);
 }
-button span:nth-child(4){
+
+button span:nth-child(4) {
     transform: translate(-12em, 0.5em);
 }
-button span:nth-child(5){
+
+button span:nth-child(5) {
     transform: translate(3.5em, -3em);
 }
-button:hover span:not(:nth-child(6)){
+
+button:hover span:not(:nth-child(6)) {
     transform: translate(-50%, -50%) scale(4);
     transition: 1.5s ease;
 }
+
 .social {
     margin-top: 30px;
     margin-left: 30%;
@@ -160,6 +168,9 @@ button:hover span:not(:nth-child(6)){
     background-color: rgba(255, 255, 255, 0.47);
 }
 
+.social a{
+    text-decoration: none;
+}
 .social i {
     margin-right: 4px;
 }
@@ -167,16 +178,19 @@ button:hover span:not(:nth-child(6)){
 .social img {
     margin-left: 30px;
 }
-.container{
+
+.container {
     max-width: 960px;
     margin: 0 auto;
     padding: 0.5em;
 }
-.alert{
+
+.alert {
     align-items: center;
     text-align: center;
     padding: 0.25em 0.75em;
 }
+
 .alert-error {
     background-color: #dc3545;
     color: #fff;
@@ -212,4 +226,3 @@ button:hover span:not(:nth-child(6)){
     font-size: 16px;
     font-weight: bold;
 }
-

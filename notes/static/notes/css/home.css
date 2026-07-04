@@ -32,12 +32,13 @@ body {
     height: 56px;
     border-radius: 50%; /* Make the div a circle by setting border-radius to 50% */
     border: 3px solid #FFBB0B; /* Define the size and color of the border */
-    background-color: transparent; /* Set the background color to transparent */
 }
-.profile-image{
+
+.profile-image {
     max-width: 56px;
     max-height: 56px;
 }
+
 aside {
     font-family: Poppins, sans-serif;
     font-size: 30px;
@@ -124,9 +125,10 @@ aside {
 }
 
 .honey-yellow {
+    border: none;
     position: relative;
-    background-color: #f1c40f;
-    height: 1px;
+    background-color: #FFBB0B;
+    height: 2px;
 }
 
 .circle {
@@ -136,11 +138,11 @@ aside {
     border: 4px solid #FFBB0B;
     border-radius: 50%;
     position: fixed;
-    transition: transform 0.5s; /* Добавляем плавный переход при анимации */
+    transition: transform 0.5s;
     z-index: 1;
     align-items: center;
-    margin-left: 75%;
-    margin-top: 33%;
+    margin-left: 90%;
+    margin-top: -5%;
     transition-duration: 0.5s;
 }
 
@@ -229,13 +231,48 @@ a:active {
 }
 
 .option {
-  cursor: pointer;
+    cursor: pointer;
 }
 
-.option:hover{
+.option:hover {
     color: #FFBB0B;
 }
 
 .option:active {
-  color: #FFBB0B;
+    color: #FFBB0B;
+}
+
+#noteModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
