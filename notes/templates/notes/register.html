@@ -10,15 +10,15 @@
     <title>Registration</title>
 </head>
 <body>
-    <div class="container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{message.tags}}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
 <div class="background">
     <div class="shape"></div>
     <div class="shape"></div>
@@ -42,10 +42,12 @@
         <span class="text">Sign up</span>
     </button>
     <div class="social">
-        <div class="go">
-            <img src="{% static 'notes/images/Google.png' %}" alt="Google" width="28" height="28">
-            <i class="Google"></i>Google
-        </div>
+        <a href="{% url "social:begin" "google-oauth2" %}">
+            <div class="go">
+                <img src="{% static 'notes/images/Google.png' %}" alt="Google" width="28" height="28">
+                <i class="Google"></i>Google
+            </div>
+        </a>
     </div>
 </form>
 </body>

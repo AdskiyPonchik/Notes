@@ -1,8 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load %}
-<!DOCTYPE html>
-<html lang="en">
 {% block title %}Home{% endblock %}
 {% block content %}
     <div class="header">
@@ -13,7 +10,7 @@
         {% endif %}
         </h1>
         <div class="image">
-            <img class='profile-image' src="{% static 'media' %}{{ Participant.profileimg }}" alt="">
+            <img class="profile-image" src="{{ participant.profileimg.url }}" alt="{{ request.user.username }}">
         </div>
     </div>
     <aside>
@@ -27,22 +24,26 @@
             <p>Favorites</p>
         </div>
     </div>
-
-    <div class="card-area">
-        <div class="circle">
-            <div class="plus"><a href="#">+</a></div>
+    <div id="noteModal" class="card">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="noteForm" method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <small>{{ field.errors|striptags }}</small>
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" id="submitNote">Create note</button>
+            </form>
         </div>
-        {% for note in notes %}
-            <div class="card">
-                <div class="name">
-                    <h2>{{ note.title }}</h2>
-                </div>
-                <hr class="honey-yellow"/>
-                <div class="text-field">
-                    <p class="text">{{ note.text }}</p>
-                </div>
-            </div>
-        {% endfor %}
+    </div>
+    <div class="card-area" id="notes" data-url="{% url 'get_notes' %}">
+        <!-- Notes are rendered here by window.js -->
+    </div>
+    <div class="circle">
+        <div class="plus"><a href="#" id="openModalBtn">+</a></div>
     </div>
 {% endblock %}
-</html>
